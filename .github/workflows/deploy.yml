@@ -28,4 +28,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages # This is the branch where the pages will be deployed
-          folder: build # This is the folder where your build command puts its output
+          folder: dist # This is the folder where your build command puts its output
