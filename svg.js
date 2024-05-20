@@ -3,7 +3,7 @@ import simplify from 'simplify-js';
 
 // Load SVG and extract paths inside #PatchCollection_1
 export async function loadSVGPaths() {
-  const response = await fetch('/Alsergrund.svg');
+  const response = await fetch('Alsergrund.svg');
   const svgText = await response.text();
   const parser = new DOMParser();
   const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
