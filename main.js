@@ -6,7 +6,7 @@ import decomp from "poly-decomp";
 Matter.Common.setDecomp(decomp);
 
 const canvas = document.getElementById("world");
-canvas.width = window.innerWidth
+canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const engine = Matter.Engine.create({
@@ -26,7 +26,6 @@ const render = Matter.Render.create({
 
 Matter.Render.run(render);
 Matter.Runner.run(Matter.Runner.create(), engine);
-
 
 // Create borders
 const borderThickness = 50;
@@ -64,20 +63,6 @@ const createBorders = () => {
     ), // Right
   ];
 };
-let borders = createBorders();
-Matter.World.add(engine.world, borders);
-
-// Handle window resize
-function handleResize() {
-  Matter.Render.lookAt(render, {
-    min: { x: 0, y: 0 },
-    max: { x: window.innerWidth, y: window.innerHeight },
-  });
-
-  Matter.World.remove(engine.world, borders);
-  borders = createBorders();
-  Matter.World.add(engine.world, borders);
-}
 
 // Calculate centroid of vertices
 function calculateCentroid(vertices) {
@@ -106,11 +91,9 @@ function createBody(vertices) {
       },
       false,
       0,
-      0.01,
+      0,
       0
     );
-    const width = body.bounds.max.x - body.bounds.min.x;
-    const height = body.bounds.max.y - body.bounds.min.y;
     Matter.World.add(engine.world, body);
   } catch (error) {
     console.error("Failed to create body from vertices:", vertices, error);
@@ -153,15 +136,20 @@ async function processPaths(paths) {
 }
 
 // Initialize
-async function init() {
+async function init(city) {
+  Matter.World.clear(engine.world);
+  Matter.Engine.clear(engine);
+  let borders = createBorders();
+  Matter.World.add(engine.world, borders);
   try {
-    const svgPaths = await loadSVGPaths();
+    console.log("Loading city:", city);
+    const svgPaths = await loadSVGPaths(city);
     console.log("Loaded SVG Paths:", svgPaths.length);
     await processPaths(svgPaths);
     engine.positionIterations = 6; // Reduced iterations
     engine.velocityIterations = 4; // Reduced iterations
     Matter.Engine.update(engine, 1000 / 60);
-    Matter.Events.on(engine, 'afterUpdate', applyAttraction);
+    Matter.Events.on(engine, "afterUpdate", applyAttraction);
 
     // Make shapes draggable
     const mouse = Matter.Mouse.create(canvas);
@@ -211,4 +199,4 @@ function applyAttraction() {
   }
 }
 
-init();
+window.initMatterJs = init;

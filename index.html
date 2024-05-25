@@ -1,14 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>✕✕✕</title>
+    <title>Skizzen Klima Biennale</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <canvas id="world"></canvas>
-    <!-- <div id="svg-container"></div> -->
     <script type="module" src="main.js"></script>
+    <select style="position: fixed; top: 0.5em; right: 0.5em">
+      <option value="Alsergrund">Alsergrund</option>
+      <option value="Auray">Auray</option>
+      <option value="Brigittenau">Brigittenau</option>
+      <option value="Döbling">Döbling</option>
+      <option value="Donaustadt">Donaustadt</option>
+      <option value="Floridsdorf">Floridsdorf</option>
+      <option value="Hernals">Hernals</option>
+      <option value="Hietzing">Hietzing</option>
+      <option value="Innere Stadt">Innere Stadt</option>
+      <option value="Josefstadt">Josefstadt</option>
+      <option value="Landstraße">Landstraße</option>
+      <option value="Leopoldstadt">Leopoldstadt</option>
+      <option value="Liesing">Liesing</option>
+      <option value="Margareten">Margareten</option>
+      <option value="Mariahilf">Mariahilf</option>
+      <option value="Meidling">Meidling</option>
+      <option value="Neubau">Neubau</option>
+      <option value="Ottakring">Ottakring</option>
+      <option value="Penzing">Penzing</option>
+      <option value="Rudolfsheim-Fünfhaus">Rudolfsheim-Fünfhaus</option>
+      <option value="Simmering">Simmering</option>
+      <option value="Währing">Währing</option>
+      <option value="Wieden">Wieden</option>
+    </select>
+    <script type="module" src="main.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const select = document.querySelector("select");
+        select.addEventListener("change", function () {
+          initMatterJs(this.value);
+        });
+        select.selectedIndex = 0;
+        select.dispatchEvent(new Event("change"));
+      });
+    </script>
   </body>
 </html>
