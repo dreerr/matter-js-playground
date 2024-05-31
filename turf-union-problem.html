@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Turf.js Union Example</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+      #map {
+        width: 100%;
+        height: 500px;
+      }
+      #toggleButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="toggleButton">Toggle Union</button>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+    <script>
+      // Initialize the map centered on Vienna, Austria
+      var map = L.map("map").setView([48.2082, 16.3738], 13);
+
+      // Add a tile layer
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Define a polygon with a hole (polygon1) and another polygon (polygon2)
+      var polygon1 = turf.cleanCoords(
+        turf.polygon([
+          [
+            [16.353, 48.211],
+            [16.383, 48.211],
+            [16.383, 48.221],
+            [16.353, 48.221],
+            [16.353, 48.211],
+          ],
+          [
+            [16.343, 48.206],
+            [16.393, 48.206],
+            [16.393, 48.236],
+            [16.343, 48.236],
+            [16.343, 48.206],
+          ],
+        ])
+      );
+
+      var polygon2 = turf.polygon([
+        [
+          [16.363, 48.215],
+          [16.383, 48.215],
+          [16.383, 48.225],
+          [16.363, 48.225],
+          [16.363, 48.215],
+        ],
+      ]);
+
+      // Create Leaflet layers for the polygons
+      var polygon1Layer = L.geoJSON(polygon1, { color: "blue" }).addTo(map);
+      var polygon2Layer = L.geoJSON(polygon2, { color: "green" }).addTo(map);
+
+      // Perform the union operation
+      var union = turf.union(polygon1, polygon2);
+
+      // Create a Leaflet layer for the union result
+      var unionLayer = L.geoJSON(union, { color: "red" });
+
+      // Toggle button functionality
+      var showingUnion = false;
+      document
+        .getElementById("toggleButton")
+        .addEventListener("click", function () {
+          if (showingUnion) {
+            map.removeLayer(unionLayer);
+            map.addLayer(polygon1Layer);
+            map.addLayer(polygon2Layer);
+            this.textContent = "Show Union";
+          } else {
+            map.removeLayer(polygon1Layer);
+            map.removeLayer(polygon2Layer);
+            map.addLayer(unionLayer);
+            this.textContent = "Hide Union";
+          }
+          showingUnion = !showingUnion;
+        });
+    </script>
+  </body>
+</html>
