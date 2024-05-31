@@ -37,71 +37,76 @@ function geojson([x, y, z], layer, filter = () => true) {
   return { type: "FeatureCollection", features };
 }
 
-// get vector tiles from eubucco tiles server
-let tiles = await Promise.all(
-  myTiles().map(async (d) => {
-    d.layers = new VectorTile(
-      new Pbf(
-        await d3.buffer(
-          `https://tiles.eubucco.com/public.data_building/${d[2]}/${d[0]}/${d[1]}.pbf?properties=id,id_source,type,type_source,height,age`
+async function main() {
+  // get vector tiles from eubucco tiles server
+  let tiles = await Promise.all(
+    myTiles().map(async (d) => {
+      d.layers = new VectorTile(
+        new Pbf(
+          await d3.buffer(
+            `https://tiles.eubucco.com/public.data_building/${d[2]}/${d[0]}/${d[1]}.pbf?properties=id,id_source,type,type_source,height,age`
+          )
         )
-      )
-    ).layers;
-    return d;
-  })
-);
+      ).layers;
+      return d;
+    })
+  );
 
-// create overlapping feature collection
-const overlappingFeatureCollection = {
-  type: "FeatureCollection",
-  features: tiles.flatMap(
-    (d) => geojson(d, d.layers["public.data_building"]).features
-  ),
-};
+  // create overlapping feature collection
+  const overlappingFeatureCollection = {
+    type: "FeatureCollection",
+    features: tiles.flatMap(
+      (d) => geojson(d, d.layers["public.data_building"]).features
+    ),
+  };
 
-// make deep copy of overlapping features
-// create unionized feature collection
-const unionizedFeatureCollection = JSON.parse(
-  JSON.stringify(overlappingFeatureCollection)
-);
+  // make deep copy of overlapping features
+  // create unionized feature collection
+  const unionizedFeatureCollection = JSON.parse(
+    JSON.stringify(overlappingFeatureCollection)
+  );
 
-// unionize overlapping polygons with the same id
-unionizedFeatureCollection.features = unionizedFeatureCollection.features
-  .sort((a, b) => a.properties.id.localeCompare(b.properties.id))
-  .reduce((acc, cur) => {
-    if (acc.length === 0) {
-      acc.push(cur);
-    } else {
-      const last = acc[acc.length - 1];
-      if (last.properties.id === cur.properties.id) {
-        // unionize overlapping polygons with the same id
-        // alter the last feature in the accumulator, don't push the current feature
-        last.geometry = union(last, cur).geometry;
-        // BUG: union is not working as expected, returns inside out polygons
-      } else {
+  // unionize overlapping polygons with the same id
+  unionizedFeatureCollection.features = unionizedFeatureCollection.features
+    .sort((a, b) => a.properties.id.localeCompare(b.properties.id))
+    .reduce((acc, cur) => {
+      if (acc.length === 0) {
         acc.push(cur);
+      } else {
+        const last = acc[acc.length - 1];
+        if (last.properties.id === cur.properties.id) {
+          // unionize overlapping polygons with the same id
+          // alter the last feature in the accumulator, don't push the current feature
+          last.geometry = union(last, cur).geometry;
+          // BUG: union is not working as expected, returns inside out polygons
+        } else {
+          acc.push(cur);
+        }
       }
-    }
-    return acc;
-  }, []);
+      return acc;
+    }, []);
 
-// draw to screen
-document.getElementById(
-  "overlapping"
-).innerHTML = `<svg viewBox="0 0 ${width} ${
-  height / 2
-}" xmlns="http://www.w3.org/2000/svg">${overlappingFeatureCollection.features.map(
-  (d) =>
-    `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
-      d.properties.id
-    }" d="${path(d)}"></path>`
-)}</svg>`;
+  // draw to screen
+  document.getElementById(
+    "overlapping"
+  ).innerHTML = `<svg viewBox="0 0 ${width} ${
+    height / 2
+  }" xmlns="http://www.w3.org/2000/svg">${overlappingFeatureCollection.features.map(
+    (d) =>
+      `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
+        d.properties.id
+      }" d="${path(d)}"></path>`
+  )}</svg>`;
 
-document.getElementById("unionized").innerHTML = `<svg viewBox="0 0 ${width} ${
-  height / 2
-}" xmlns="http://www.w3.org/2000/svg">${unionizedFeatureCollection.features.map(
-  (d) =>
-    `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
-      d.properties.id
-    }" d="${path(d)}"></path>`
-)}</svg>`;
+  document.getElementById(
+    "unionized"
+  ).innerHTML = `<svg viewBox="0 0 ${width} ${
+    height / 2
+  }" xmlns="http://www.w3.org/2000/svg">${unionizedFeatureCollection.features.map(
+    (d) =>
+      `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
+        d.properties.id
+      }" d="${path(d)}"></path>`
+  )}</svg>`;
+}
+main();
