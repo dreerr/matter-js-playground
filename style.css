@@ -5,3 +5,6 @@ body {
 canvas {
   border: none;
 }
+svg {
+  display: block;
+}
