@@ -5,6 +5,7 @@ import { tile } from "d3-tile";
 import { VectorTile } from "@mapbox/vector-tile";
 import Pbf from "pbf";
 import { union } from "@turf/turf";
+import rewind from "@mapbox/geojson-rewind";
 
 let height = window.innerHeight;
 let width = window.innerWidth;
@@ -52,22 +53,16 @@ async function main() {
     })
   );
 
-  // create overlapping feature collection
-  const overlappingFeatureCollection = {
+  // create feature collection
+  const featureCollection = {
     type: "FeatureCollection",
     features: tiles.flatMap(
       (d) => geojson(d, d.layers["public.data_building"]).features
     ),
   };
 
-  // make deep copy of overlapping features
-  // create unionized feature collection
-  const unionizedFeatureCollection = JSON.parse(
-    JSON.stringify(overlappingFeatureCollection)
-  );
-
   // unionize overlapping polygons with the same id
-  unionizedFeatureCollection.features = unionizedFeatureCollection.features
+  featureCollection.features = featureCollection.features
     .sort((a, b) => a.properties.id.localeCompare(b.properties.id))
     .reduce((acc, cur) => {
       if (acc.length === 0) {
@@ -77,8 +72,14 @@ async function main() {
         if (last.properties.id === cur.properties.id) {
           // unionize overlapping polygons with the same id
           // alter the last feature in the accumulator, don't push the current feature
-          last.geometry = union(last, cur).geometry;
-          // BUG: union is not working as expected, returns inside out polygons
+          const unionized = union(last, cur);
+          /* rewinding is necessary to ensure that the polygons are in correct order
+             d3.geoPath: Spherical polygons also require a winding order convention
+             to determine which side of the polygon is the inside: the exterior ring
+             for polygons smaller than a hemisphere must be clockwise, while the
+             exterior ring for polygons larger than a hemisphere must be anticlockwise
+          */
+          last.geometry = rewind(unionized.geometry, true);
         } else {
           acc.push(cur);
         }
@@ -88,21 +89,8 @@ async function main() {
 
   // draw to screen
   document.getElementById(
-    "overlapping"
-  ).innerHTML = `<svg viewBox="0 0 ${width} ${
-    height / 2
-  }" xmlns="http://www.w3.org/2000/svg">${overlappingFeatureCollection.features.map(
-    (d) =>
-      `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
-        d.properties.id
-      }" d="${path(d)}"></path>`
-  )}</svg>`;
-
-  document.getElementById(
     "unionized"
-  ).innerHTML = `<svg viewBox="0 0 ${width} ${
-    height / 2
-  }" xmlns="http://www.w3.org/2000/svg">${unionizedFeatureCollection.features.map(
+  ).innerHTML = `<svg viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">${featureCollection.features.map(
     (d) =>
       `<path fill="rgba(255,0,0,0.05)" stroke="#000" stroke-width="0.5" id="${
         d.properties.id
