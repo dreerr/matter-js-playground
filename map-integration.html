@@ -5,37 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Map Integration</title>
     <link rel="stylesheet" href="style.css" />
-    <style>
-      #earcut {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-      }
-      #unionized {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-      }
-    </style>
   </head>
   <body>
     <canvas id="earcut" class="toggable"></canvas>
     <div id="unionized" class="toggable"></div>
     <script type="module" src="map-integration.js"></script>
     <script>
-      // Initialize state
+      // Toggle visibility of the canvas and the div
       let visibilityState = 0;
-
-      // Get all elements with the 'toggable' class
       const toggableElements = document.querySelectorAll(".toggable");
-
-      // Function to toggle visibility
       function toggleVisibility() {
         toggableElements.forEach((element, index) => {
           element.style.display =
@@ -43,15 +21,9 @@
               ? "block"
               : "none";
         });
-
-        // Update state
         visibilityState = (visibilityState + 1) % (toggableElements.length + 1);
       }
-
-      // Initial visibility
       toggleVisibility();
-
-      // Add click event listener
       document.addEventListener("click", toggleVisibility);
     </script>
   </body>
